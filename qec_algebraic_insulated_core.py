@@ -62,7 +62,7 @@ class QecAlgebraicInsulatedCore:
         return isolated_telemetry
 
 
-       # (enforce_quantum_isolation_gate 함수 바로 아래에 배치)
+    # (enforce_quantum_isolation_gate 함수 바로 아래에 배치)
 
     # [KR] 🛠 정적 컴파일 무결성을 위해 staticmethod 및 jit 전면 적용
     # [EN] 🛠 Enforced staticmethod and jit decorators to guarantee static compilation integrity
@@ -81,9 +81,7 @@ class QecAlgebraicInsulatedCore:
         return loss
 
 
-       # (compute_loss 함수 바로 아래에 배치)
-
-    # [KR] 🛠 미분과 가중치 업데이트 전체 과정을 융합(Fusion)하여 파이썬 GIL 레이턴시 전면 제거
+        # [KR] 🛠 미분과 가중치 업데이트 전체 과정을 융합(Fusion)하여 파이썬 GIL 레이턴시 전면 제거
     # [EN] 🛠 Fully fused the gradient extraction and weight updates to completely eliminate Python GIL latency
     @staticmethod
     @jax.jit
@@ -98,14 +96,11 @@ class QecAlgebraicInsulatedCore:
         next_weights = weights - (learning_rate * grads)
         return next_weights, loss_val
 
-       # (self._jit_update_step 함수 바로 아래에 배치되는 인스턴스 메서드)
-
     def update_control_intelligence(self, raw_telemetry: jnp.ndarray) -> Tuple[jnp.ndarray, float]:
         """
         [KR] [LAYER B] 하단 베어메탈 정적 레일 주입용 32채널 양자 제어 상수 추출
         [EN] [LAYER B] Extracted 32-Channel Parametric Constants for Quantum Peripheral Bare-Metal Ingestion
         """
-        # 정적으로 가속된 내부 JIT 업데이트 함수를 호출하도록 매핑 변경
         # [KR] 파이썬 루프 제어를 타지 않고 메모리 락이 완료된 XLA 정적 최적화 하위 커널로 다이렉트 푸시
         # [EN] Bypasses ordinary Python loop interpreters and directly pushes to the locked XLA static sub-kernel
         self.sovereign_quantum_weights, loss_val = self._jit_update_step(
@@ -125,6 +120,8 @@ def trigger_system_warmup(ai_brain: QecAlgebraicInsulatedCore):
     [KR] [🚨 CRITICAL WARMUP] 가짜 텐서로 XLA 컴파일러 1회 예열 (컴파일 렉 원천 제거)
     [EN] [🚨 CRITICAL WARMUP] Initial XLA Compiler Warm-up via Dummy Tensor to Eliminate JIT Latency
     """
+    import time # [안정성 사수] 함수 독자 실행 및 외부 레이어 임포트 시 NameError 원천 차단
+    
     print("[🏰 System Boot] QEC XLA Kernel Warm-up Started...")
     start_warmup = time.perf_counter()
     
@@ -161,15 +158,7 @@ if __name__ == "__main__":
         
     print("\n[Final Parametric Constants]:\n", optimized_constants)
 
-"""
-💡 [PRODUCTION GUIDE]
-1. 웜업(ms) 대비 실전 속도(µs) 검증.
-2. Layer 3 Orchestrator: 부팅 시 trigger_system_warmup 호출.
-"""
-
-
-    
-      # [KR] JIT 예열이 끝난 0ms 정적 머신코드 레일 위에서 초고속 미분 추론 집행
+    # [KR] JIT 예열이 끝난 0ms 정적 머신코드 레일 위에서 초고속 미분 추론 및 벤치마크 집행
     # [EN] Execute ultra-high-speed inference loops over the 0ms static machine code rail
     for step in range(3):
         start_step = time.perf_counter()
@@ -182,6 +171,7 @@ if __name__ == "__main__":
     
     print("\n[Target Sub-Grid Static Parametric Phase Constants Output]:")
     print(optimized_constants)
+
 
 """
 💡 [PRODUCTION DEPLOYMENT & INTEGRATION GUIDELINE]
@@ -196,4 +186,3 @@ if __name__ == "__main__":
 1. Standalone Verification: Executing this file in isolation directly benchmarks the stark latency difference between the initial warm-up (tens of ms) and live execution cycles (microseconds).
 2. Layer 3 Orchestrator Integration: Force the global pulse orchestrator to invoke trigger_system_warmup during the bootstrap sequence (__init__) of all distributed sector instances, perfectly sealing hidden software bottlenecks before live quantum streaming ingestion.
 """
-

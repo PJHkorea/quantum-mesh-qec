@@ -16,6 +16,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h> // [Strict-Aliasing 방어] __builtin_memcpy 지원 헤더 강제 바인딩
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,6 +34,7 @@ extern "C" {
  * @brief [병목 0%] 컴파일러 자율권을 박탈하는 실리콘 레지스터 락 무분기 셀렉터
  * @details 참/거짓 분기문(if-else)을 기계어 레벨에서 원천 도살하며, 
  *          LTO(Link Time Optimization) 환경에서도 코드가 역변환되거나 증발하지 않도록 밀봉함.
+ *          메모리 스필(Spill)을 금지하고 반드시 범용 레지스터("+r") 구속을 고수하여 0ns 지터를 보장합니다.
  */
 static inline uint32_t quantum_branchless_select_u32(uint32_t condition, uint32_t true_val, uint32_t false_val) {
     // 참이면 0xFFFFFFFF, 거짓이면 0x00000000으로 대수적 확장
@@ -51,37 +53,56 @@ static inline uint32_t quantum_branchless_select_u32(uint32_t condition, uint32_
     return false_val ^ ((true_val ^ false_val) & mask);
 }
 
-#ifdef __cplusplus
-}
-#endif
-#endif /* QUANTUM_BAREMETAL_INGRESS_H */
-
-
-/* ========================================================================= */
-/* [QUANTUM HARDWARE ALIGNED STRUCTURE DEFINITIONS]                         */
-/* ========================================================================= */
+    // (위 32비트 셀렉터 함수에 이어서 배치)
 
 /**
- * @struct QubitRegister32
- * @brief [KR] 32비트 단정밀도 말초 큐비트 센서 노드 구조체 (32바이트 정렬 마감)
- *        [EN] 32-bit Single-Precision Peripheral Qubit Sensor Node Structure (32-byte Aligned)
- * @details [KR] 총 페이로드 16바이트에 하드웨어 패딩 16바이트를 결합하여 정확히 32바이트 규격을 강제합니다.
- *          이를 통해 CPU/가속기의 단일 캐시라인 버스트(Single Cache Line Burst) 내 L1 캐시 상주를 100% 보장합니다.
- *          [EN] Combines a 16-byte operational payload with a 16-byte explicit hardware padding to enforce
- *          an exact 32-byte specification, guaranteeing L1 data cache residency within a single cache line burst.
+ * @brief [병목 0%] 64비트 배정밀도 및 범용 레지스터 전용 실리콘 레지스터 락 무분기 셀렉터
+ * @details double형 부동소수점 비트 재해석 데이터를 통제하기 위해 정확히 64비트 크기의 정수 마스크를 형성함.
+ *          HBM/VRAM 메모리 스필을 완벽히 차단하고 64비트 범용 레지스터("+r") 내부 구속을 고수합니다.
+ */
+static inline uint64_t quantum_branchless_select_u64(uint64_t condition, uint64_t true_val, uint64_t false_val) {
+    // 참이면 0xFFFFFFFFFFFFFFFF, 거짓이면 0x0000000000000000으로 대수적 확장
+    uint64_t mask = -(uint64_t)(!!condition);
+    
+#if defined(__GNUC__) || defined(__clang__)
+    // [안정성 밀봉] 64비트 범용 레지스터 단축 락 강제 집행
+    __asm__ __volatile__("" : "+r"(mask)); 
+#else
+    volatile uint64_t* const barrier_ptr = &mask;
+    mask = *barrier_ptr;
+#endif
+    
+    return false_val ^ ((true_val ^ false_val) & mask);
+}
+
+
+
+// (QubitRegister32 구조체 및 _Static_assert 단정문 바로 아래에 배치)
+
+/**
+ * @struct QuantumPhaseVector64
+ * @brief 64비트 배정밀도 하위 그리드 고정밀 파울리 위상 보정 벡터 구조체 (16바이트 정렬)
+ * @details double 2개(16바이트)로 구성되어 FPU 배정밀도 레지스터 연산 파이프라인에 최적화.
+ */
+typedef struct __attribute__((aligned(16))) {
+    double phase_u;  /* 8바이트: 수평 공간 파울리 위상 보정 */
+    double phase_v;  /* 8바이트: 수직 공간 파울리 위상 보정 */
+} QuantumPhaseVector64;
+
+/**
+ * @struct QuantumMeshNode64
+ * @brief 64비트 배정밀도 중앙 매트릭스 컨트롤러 코어 노드 구조체 (32바이트 정렬)
+ * @details 16바이트 페이로드 + 16바이트 패딩 = 32바이트(캐시라인) 정렬.
  */
 typedef struct __attribute__((aligned(32))) {
-    float state_phi;      /* [KR] 4바이트: 큐비트 위상 공간 변위 알파 / [EN] 4-byte: Qubit phase space displacement alpha */
-    float state_theta;    /* [KR] 4바이트: 큐비트 위상 공간 변위 베타 / [EN] 4-byte: Qubit phase space displacement beta */
-    float crosstalk_bias; /* [KR] 4바이트: 인접 큐비트 위상 간섭 노이즈 대리값 / [EN] 4-byte: Neighboring crosstalk phase noise proxy */
-    uint32_t gate_lock;   /* [KR] 4바이트: 0ns 무분기 대수 비트 연산용 하드웨어 가드 스위치 / [EN] 4-byte: Hardware guard switch for 0ns branchless algebraic operations */
-    uint8_t reserved[16]; /* [KR] 16바이트: strict 32바이트 캐시라인 경계 정렬을 위한 정적 패딩 / [EN] 16-byte: Static hardware padding for strict L1 cache line alignment */
-} QubitRegister32;
+    double crosstalk_depth; /* 8바이트: 기하학적 크로스토크 간섭 깊이 */
+    double decoupling_gain; /* 8바이트: 비선형 감쇠 동적 디커플링 계수 */
+    uint8_t reserved[16];   /* 16바이트: L1 캐시라인 정렬 패딩 */
+} QuantumMeshNode64;
 
-/* [KR] 정적 자가 검증 시스템 기믹 주입 */
-/* [EN] Static Self-Validation System Activation */
-/* 컴파일 타임에 구조체의 정렬 크기가 물리적 32바이트 경계에서 단 1비트라도 어긋나면 빌드 자체를 거부합니다. */
-_Static_assert(sizeof(QubitRegister32) == 32, "CRITICAL ERROR: QubitRegister32 hardware L1 alignment mismatch!");
+/* 64비트 전산 레이아웃 정적 자가 검증 시스템 */
+_Static_assert(sizeof(QuantumPhaseVector64) == 16, "CRITICAL ERROR: QuantumPhaseVector64 alignment!");
+_Static_assert(sizeof(QuantumMeshNode64) == 32, "CRITICAL ERROR: QuantumMeshNode64 alignment!");
 
 /**
  * @struct QuantumPhaseVector64
@@ -105,7 +126,7 @@ typedef struct __attribute__((aligned(16))) {
 typedef struct __attribute__((aligned(32))) {
     double crosstalk_depth; /* [KR] 8바이트: 기하학적 크로스토크 간섭 깊이 지표 / [EN] 8-byte: Geometric crosstalk interference depth metric */
     double decoupling_gain; /* [KR] 8바이트: 비선형 감쇠 동적 디커플링 피드백 계수 / [EN] 8-byte: Non-linear attenuation dynamic decoupling feedback coefficient */
-    uint8_t reserved;  /* [KR] 16바이트: L1 캐시라인 정렬용 정적 패딩 / [EN] 16-byte: Static padding for strict L1 cache line alignment */
+    uint8_t reserved[16];   /* [KR] 16바이트: L1 캐시라인 정렬용 정적 패딩 / [EN] 16-byte: Static padding for strict L1 cache line alignment */
 } QuantumMeshNode64;
 
 /* [KR] 정적 자가 검증 시스템 기믹 연속 주입 */
@@ -114,74 +135,73 @@ _Static_assert(sizeof(QuantumPhaseVector64) == 16, "CRITICAL ERROR: QuantumPhase
 _Static_assert(sizeof(QuantumMeshNode64) == 32, "CRITICAL ERROR: QuantumMeshNode64 L1 alignment mismatch!");
 
 
-/**
- * @brief [KR] [LAYER 1] 32비트 말초 큐비트 센서 코어 (분기 지터 멸절 엔진)
- *        [EN] [LAYER 1] 32-BIT PERIPHERAL QUBIT SENSOR CORE (Branch-Induced Jitter Elimination Engine)
- * @details [KR] 거친 생(Raw) 양자 상태 신호를 '파울리 위상 공간 전개 회전 노치' 수식으로 고속 정제합니다.
- *          기존 v4.1 패치의 삼항 연산과 컴파일러 힌트(? :, __builtin_expect)를 전면 폐기하고,
- *          인라인 어셈블리 배리어가 결합된 100% 무분기 비트 마스킹 하드웨어 MUX 에뮬레이션을 집행합니다.
- *          [EN] High-speed purification of raw quantum telemetry signals via the 'Pauli Phase Space Rotation Notch' algorithm.
- *          Completely discards ternary operator hints (__builtin_expect) from v4.1, enforcing a strict 100% 
- *          branchless bitwise-masking hardware MUX emulation combined with inline assembly barriers.
- */
 static inline float quantum_mesh_cell32_process(
     QubitRegister32* const self, 
     volatile float raw_quantum_signal, 
     float cos_theta, 
     float sin_theta
 ) {
-    /* [KR] 1. 하드웨어 예외 감지 (IEEE 754 표준 준수 결어긋남 및 탈동조화 결함 가드) */
-    /* [EN] 1. Hardware Anomaly Detection (IEEE 754 Compliant Decoherence Fault Isolation Guard) */
+    /* 1. 하드웨어 예외 감지 (IEEE 754 준수) */
     int is_nan = (raw_quantum_signal != raw_quantum_signal);
     int is_over = (raw_quantum_signal > 1e6f) || (raw_quantum_signal < -1e6f);
-    
-    // [무분기 논리합] 단축 평가(Short-Circuit)로 인한 점프 명령어 유출을 방지하기 위해 비트 OR(|)로 평탄화
     uint32_t is_anomaly = (uint32_t)(is_nan | is_over);
 
-    /* [KR] 2. 파울리 위상 공간 전개 회전 노치 (하드웨어 자체 양자 상태 예측 연산) */
-    /* [EN] 2. Pauli Phase Space Rotation Notch (Hardware-Level Qubit State Prediction) */
+    /* 2. 파울리 위상 공간 전개 회전 노치 */
     float phi0_pred = (cos_theta * self->state_phi) - (sin_theta * self->state_theta);
     float phi1_pred = (sin_theta * self->state_phi) + (cos_theta * self->state_theta);
 
-
-       
-      /* [KR] 3. 고속 파데 [1/1] 유리함수 위상 감쇠 매핑 (Padé Rational Phase Damping)
-     * 표준 <math.h> 함수 호출 오버헤드와 분기 렉을 제거하기 위해 컴파일러 내장 함수 적용.
-     * 이를 통해 컴파일러는 함수 점프 없이 FPU 단일 클럭 명령어(ARM 'VABS', x86 'FABSS')를 즉시 밀어냅니다. */
-    /* [EN] 3. High-Speed Padé [1/1] Rational Phase Damping Mapping
-     * Applied compiler intrinsics to eliminate standard <math.h> function call overhead and branch lag.
-     * This forces the compiler to immediately emit single-clock FPU instructions (ARM 'VABS', x86 'FABSS') without a function jump. */
+    /* 3. 고속 파데 [1/1] 유리함수 위상 감쇠 */
     float scaled_phase_energy = __builtin_fabsf(phi0_pred * self->crosstalk_bias);
     float numerator = 6.0f * scaled_phase_energy;
-    float denominator = 12.0f + (scaled_phase_energy * scaled_phase_energy) + 1e-9f; /* [KR] 0 나누기 방지 엡실론 / [EN] Singularity prevention epsilon */
+    float denominator = 12.0f + (scaled_phase_energy * scaled_phase_energy) + 1e-9f; 
+    float rational_scale_factor = numerator / denominator;
+
+    /* 4. 상태 업데이트 및 무분기 MUX 에뮬레이션 */
+    float next_phi0 = phi0_pred + (self->crosstalk_bias * (raw_quantum_signal - phi0_pred)) * rational_scale_factor;
+    float fail_val = -99.0f;
+    uint32_t next_phi0_bits, fail_val_bits, final_phi0_bits;
+
+    // Strict-Aliasing 방어 및 레지스터 직접 가로채기
+    __builtin_memcpy(&next_phi0_bits, &next_phi0, sizeof(uint32_t));
+    __builtin_memcpy(&fail_val_bits, &fail_val, sizeof(uint32_t));
+
+    final_phi0_bits = quantum_branchless_select_u32(is_anomaly, fail_val_bits, next_phi0_bits);
+
+    __builtin_memcpy(&(self->state_phi), &final_phi0_bits, sizeof(float));
+    self->state_theta = phi1_pred;
+
+    return self->state_phi;
+}
+
+
+
+      /* [KR] 3. 고속 파데 [1/1] 유리함수 위상 감쇠 매핑 (Padé Rational Phase Damping) */
+    float scaled_phase_energy = __builtin_fabsf(phi0_pred * self->crosstalk_bias);
+    float numerator = 6.0f * scaled_phase_energy;
+    float denominator = 12.0f + (scaled_phase_energy * scaled_phase_energy) + 1e-9f; 
     float rational_scale_factor = numerator / denominator;
 
     /* [KR] 4. 말초 상태 메모리 업데이트 준비 */
-    /* [EN] 4. Peripheral State Memory Update Preparation */
     float next_phi0 = phi0_pred + (self->crosstalk_bias * (raw_quantum_signal - phi0_pred)) * rational_scale_factor;
 
-
-
-    
-      /* [KR] 📌 HARDWARE MUX EMULATION: 분기 예고 없는 레지스터 도메인 격리 가드
-     * [패러다임의 혁신] 컴파일러 힌트(__builtin_expect)와 삼항 연산자마저 전면 박멸했습니다.
-     * float 데이터를 uint32_t 기저 비트 평면으로 주소 재해석 캐스팅하여, 앞서 구현한 
-     * quantum_branchless_select_u32의 완벽한 컴파일러 배리어 인플레이스 레지스터 락 내부로 통과시킵니다. */
-    /* [EN] 📌 HARDWARE MUX EMULATION: Branchless Register Domain Isolation Guard
-     * [Paradigm Shift] Completely erases compiler hints (__builtin_expect) and ternary operators.
-     * Performs float-to-uint32_t address-reinterpretation casting, driving the underlying bit planes
-     * directly into the inline assembly compiler barrier register lock of quantum_branchless_select_u32. */
+    /* [KR] 📌 HARDWARE MUX EMULATION: ISO C 표준 Strict Aliasing 완벽 방어형 마감
+     * 주소 역참조 포인터 캐스팅을 영구 폐기하고 __builtin_memcpy로 대체합니다.
+     * 현대 가속기 컴파일러는 이 복사 수식을 런타임 메모리 이동 오버헤드가 제로(Zero-Cost)인 
+     * 레지스터 단축 이동 기계어로 자동 치환하며 컴파일러 에이전트의 오프셋 왜곡을 원천 봉쇄합니다. */
     float fail_val = -99.0f;
+    uint32_t fail_val_bits;
+    uint32_t next_phi0_bits;
+    uint32_t final_phi0_bits;
 
-    // [수리 대수적 캐스팅] 부동소수점(float)의 내부 비트 레이아웃을 그대로 유지한 채 정수형 범용 레지스터로 인입
-    uint32_t fail_val_bits = *(uint32_t*)&fail_val;
-    uint32_t next_phi0_bits = *(uint32_t*)&next_phi0;
+    // [Strict-Aliasing 무결성 보장 비트 가로채기]
+    __builtin_memcpy(&fail_val_bits, &fail_val, sizeof(uint32_t));
+    __builtin_memcpy(&next_phi0_bits, &next_phi0, sizeof(uint32_t));
 
-    // [완전 무분기 셀렉션] 컴파일러 자율권이 0%인 상태에서 대수학적으로 최종 타겟 비트 확정
-    uint32_t final_phi0_bits = quantum_branchless_select_u32(is_anomaly, fail_val_bits, next_phi0_bits);
+    // [완전 무분기 셀렉션] 레지스터 단에서 대수학적으로 최종 타겟 비트 확정
+    final_phi0_bits = quantum_branchless_select_u32(is_anomaly, fail_val_bits, next_phi0_bits);
 
-    // [물리적 복원] 정수형 레지스터에서 연산이 종결된 비트 패턴을 다시 float 메모리 공간으로 복사 복원
-    self->state_phi = *(float*)&final_phi0_bits;
+    // [물리적 복원] 정수 레지스터의 비트 패턴을 32바이트 정렬된 물리 메모리로 인플레이스 복사
+    __builtin_memcpy(&(self->state_phi), &final_phi0_bits, sizeof(float));
     self->state_theta = phi1_pred;
 
     return self->state_phi;

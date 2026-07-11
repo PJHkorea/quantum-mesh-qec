@@ -81,14 +81,17 @@ Traditional Fault-Tolerant Quantum Computing (FTQC) infrastructures face a catas
 ### 1. Matrix-Free Cross-Axis Phase Stabilization
 Instead of utilizing global, latency-heavy matrix solvers, `Quantum-Mesh-QEC` implements decentralized, localized tensor analysis across 32-channel edge sensors via Layer 2 AI Cores. By calculating discrete spatial phase gradients:
 
-$$\Delta\Phi_U = \text{Axis}_{\text{EAST}} - \text{Axis}_{\text{WEST}}$$
-$$\Delta\Phi_V = \text{Axis}_{\text{NORTH}} - \text{Axis}_{\text{SOUTH}}$$
+$$\Delta\Phi_{U} = \text{Axis}_{\text{EAST}} - \text{Axis}_{\text{WEST}}$$
+$$\Delta\Phi_{V} = \text{Axis}_{\text{NORTH}} - \text{Axis}_{\text{SOUTH}}$$
 
-The system achieves instantaneous, autonomous fault correction. When a quadrant failure occurs (e.g., $\text{Axis}_{\text{NORTH}} \to -99.0f$), the Layer 1 C-Kernel intercepts the boundary, remapping the faulty sector (e.g., $\text{Axis}_{\text{NORTH}} \to 0.0$) and applying a localized cross-inversion:
+The system achieves instantaneous, autonomous fault correction. When a quadrant failure occurs (e.g., $`\text{Axis}_{\text{NORTH}} \to -99.0f`$), the Layer 1 C-Kernel intercepts the boundary, remapping the faulty sector (e.g., $`\text{Axis}_{\text{NORTH}} \to 0.0`$) and applying a localized cross-inversion:
 
-$$V_{\text{fault}} = - \Delta\Phi_V \times \gamma_{\text{decoupling}}$$
+
+
+$$V_{\text{fault}} = -\Delta\Phi_{V} \times \gamma_{\text{decoupling}}$$
 
 This operation executes entirely within local hardware registers without needing centralized Layer 3 instructions.
+
 
 
 ---

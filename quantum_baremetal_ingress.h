@@ -75,7 +75,6 @@ static inline uint64_t quantum_branchless_select_u64(uint64_t condition, uint64_
     return false_val ^ ((true_val ^ false_val) & mask);
 }
 
-
 /* ========================================================================= */
 /* [QUANTUM HARDWARE ALIGNED STRUCTURE DEFINITIONS]                         */
 /* ========================================================================= */
@@ -119,42 +118,37 @@ _Static_assert(sizeof(QubitRegister32) == 32, "CRITICAL ERROR: QubitRegister32 a
 _Static_assert(sizeof(QuantumPhaseVector64) == 16, "CRITICAL ERROR: QuantumPhaseVector64 alignment!");
 _Static_assert(sizeof(QuantumMeshNode64) == 32, "CRITICAL ERROR: QuantumMeshNode64 alignment!");
 
-
 /* ========================================================================= */
 /* [QUANTUM HARDWARE ALIGNED STRUCTURE DEFINITIONS - FINALIZED]              */
 /* ========================================================================= */
 
-/**
- * @struct QubitRegister32
- * @brief [KR] 32비트 단정밀도 말초 큐비트 센서 노드 구조체 (32바이트 정렬 마감)
- * @details 총 페이로드 16바이트에 하드웨어 패딩 16바이트를 결합하여 exact 32-byte 캐시라인을 완성합니다.
- */
+// QubitRegister32: 32바이트(aligned(32))로 정렬된 큐비트 센서 노드
 typedef struct __attribute__((aligned(32))) {
-    float state_phi;      /* 4바이트: 큐비트 위상 공간 변위 알파 */
-    float state_theta;    /* 4바이트: 큐비트 위상 공간 변위 베타 */
-    float crosstalk_bias; /* 4바이트: 인접 큐비트 위상 간섭 노이즈 대리값 */
-    uint32_t gate_lock;   /* 4바이트: 0ns 무분기 대수 비트 연산용 하드웨어 가드 스위치 */
-    uint8_t reserved[16]; /* 16바이트: strict 32바이트 캐시라인 경계 정렬을 위한 정적 패딩 */
+    float state_phi;
+    float state_theta;
+    float crosstalk_bias;
+    uint32_t gate_lock;
+    uint8_t reserved[16]; // 32바이트 정렬을 위한 패딩
 } QubitRegister32;
 
-/**
- * @struct QuantumPhaseVector64
- * @brief [KR] 64비트 배정밀도 하위 그리드 고정밀 파울리 위상 보정 벡터 구조체 (16바이트 정렬)
- */
+// QuantumPhaseVector64: 16바이트(aligned(16))로 정렬된 파울리 위상 보정 벡터
 typedef struct __attribute__((aligned(16))) {
-    double phase_u;  /* 8바이트: 정밀 공간 파울리 위상 보정 벡터 U (수평) */
-    double phase_v;  /* 8바이트: 정밀 공간 파울리 위상 보정 벡터 V (수직) */
+    double phase_u;
+    double phase_v;
 } QuantumPhaseVector64;
 
-/**
- * @struct QuantumMeshNode64
- * @brief [KR] 64비트 배정밀도 중앙 매트릭스 컨트롤러 코어 노드 구조체 (32바이트 정렬 마감)
- */
+// QuantumMeshNode64: 32바이트(aligned(32))로 정렬된 메쉬 컨트롤러 노드
 typedef struct __attribute__((aligned(32))) {
-    double crosstalk_depth; /* 8바이트: 기하학적 크로스토크 간섭 깊이 지표 */
-    double decoupling_gain; /* 8바이트: 비선형 감쇠 동적 디커플링 피드백 계수 */
-    uint8_t reserved[16];   /* 16바이트: L1 캐시라인 정렬용 정적 패딩 */
+    double crosstalk_depth;
+    double decoupling_gain;
+    uint8_t reserved[16]; // 32바이트 정렬을 위한 패딩
 } QuantumMeshNode64;
+
+// 정적 자가 검증 (Static Assertions)
+_Static_assert(sizeof(QubitRegister32) == 32, "QubitRegister32 size mismatch");
+_Static_assert(sizeof(QuantumPhaseVector64) == 16, "QuantumPhaseVector64 size mismatch");
+_Static_assert(sizeof(QuantumMeshNode64) == 32, "QuantumMeshNode64 size mismatch");
+
 
 /* 정적 자가 검증 시스템 기믹 주입 */
 _Static_assert(sizeof(QubitRegister32) == 32, "CRITICAL ERROR: QubitRegister32 L1 alignment mismatch!");
@@ -177,7 +171,7 @@ static inline float quantum_mesh_cell32_process(
     float phi0_pred = (cos_theta * self->state_phi) - (sin_theta * self->state_theta);
     float phi1_pred = (sin_theta * self->state_phi) + (cos_theta * self->state_theta);
 
-    /* 3. 고속 파데 [1/1] 유리함수 위상 감쇠 */
+       /* 3. 고속 파데 [1/1] 유리함수 위상 감쇠 */
     float scaled_phase_energy = __builtin_fabsf(phi0_pred * self->crosstalk_bias);
     float numerator = 6.0f * scaled_phase_energy;
     float denominator = 12.0f + (scaled_phase_energy * scaled_phase_energy) + 1e-9f; 
@@ -188,7 +182,8 @@ static inline float quantum_mesh_cell32_process(
     float fail_val = -99.0f;
     uint32_t next_phi0_bits, fail_val_bits, final_phi0_bits;
 
-    // Strict-Aliasing 방어 및 레지스터 직접 가로채기
+    /* [Strict-Aliasing 방어 및 레지스터 직접 가로채기]
+     * ISO C 표준을 준수하면서 오버헤드 0인 GPR(범용 레지스터) 데이터 무분기 라우팅 관통 */
     __builtin_memcpy(&next_phi0_bits, &next_phi0, sizeof(uint32_t));
     __builtin_memcpy(&fail_val_bits, &fail_val, sizeof(uint32_t));
 
@@ -201,40 +196,6 @@ static inline float quantum_mesh_cell32_process(
 }
 
 
-
-   
-
-    // [Strict-Aliasing 무결성 보장 비트 가로채기]
-    __builtin_memcpy(&fail_val_bits, &fail_val, sizeof(uint32_t));
-    __builtin_memcpy(&next_phi0_bits, &next_phi0, sizeof(uint32_t));
-
-    // [완전 무분기 셀렉션] 레지스터 단에서 대수학적으로 최종 타겟 비트 확정
-    final_phi0_bits = quantum_branchless_select_u32(is_anomaly, fail_val_bits, next_phi0_bits);
-
-    // [물리적 복원] 정수 레지스터의 비트 패턴을 32바이트 정렬된 물리 메모리로 인플레이스 복사
-    __builtin_memcpy(&(self->state_phi), &final_phi0_bits, sizeof(float));
-    self->state_theta = phi1_pred;
-
-    return self->state_phi;
-}
-
-/**
- * @brief [병목 0%] 64비트 배정밀도 및 범용 레지스터 전용 실리콘 레지스터 락 무분기 셀렉터
- */
-static inline uint64_t quantum_branchless_select_u64(uint64_t condition, uint64_t true_val, uint64_t false_val) {
-    // 참이면 0xFFFFFFFFFFFFFFFF, 거짓이면 0x0000000000000000으로 대수적 확장
-    uint64_t mask = -(uint64_t)(!!condition);
-    
-#if defined(__GNUC__) || defined(__clang__)
-    // [안정성 밀봉] 64비트 범용 레지스터 단축 락 강제 집행
-    __asm__ __volatile__("" : "+r"(mask)); 
-#else
-    volatile uint64_t* const barrier_ptr = &mask;
-    mask = *barrier_ptr;
-#endif
-    
-    return false_val ^ ((true_val ^ false_val) & mask);
-}
 
 /**
  * @brief [KR] [LAYER 2] 64비트 코어 공간 매트릭스 컨트롤러 (동적 디커플링 제어 스위치)
@@ -322,15 +283,12 @@ static inline QuantumPhaseVector64 quantum_mesh_core64_process(
     double scale_damping_coefficient = 1.0 / safe_denom;
 
 
-      /* [KR] 3. 다차원 이산 공간 파울리 위상 편차 스칼라 추출 */
+         /* [KR] 3. 다차원 이산 공간 파울리 위상 편차 스칼라 추출 */
     /* [EN] 3. Multi-Dimensional Discrete Spatial Pauli Phase Gradient Scalar Extraction */
     double spatial_gradient_u = east - west;
     double spatial_gradient_v = north - south;
 
-    /* [KR] 4. 📌 THE MASTER TRICK: 교차축 크로스토크 상쇄용 파울리 위상 보정 펄스 주입 (Dynamic Decoupling 위상 반전)
-     * [물리적 완결성] 수직 축 스칼라값에 마이너스 부호(-)를 결합하여 중앙 사령탑 지시 없이 
-     * 인접 큐비트 간 크로스토크 간섭 행렬을 대수적으로 상쇄하는 파울리 위상 보정 펄스를 마이크로초 내로 자율 직분사합니다. */
-    /* [EN] 4. 📌 THE MASTER TRICK: Cross-Axis Crosstalk Cancellation via Pauli Phase Correction Pulse Injection (Dynamic Decoupling Phase Inversion) */
+    /* [KR] 4. 📌 THE MASTER TRICK: 교차축 크로스토크 상쇄용 파울리 위상 보정 펄스 주입 (Dynamic Decoupling 위상 반전) */
     displacement_vector.phase_u = spatial_gradient_u * scale_damping_coefficient * self->decoupling_gain;
     displacement_vector.phase_v = -spatial_gradient_v * scale_damping_coefficient * self->decoupling_gain;
 
@@ -341,7 +299,4 @@ static inline QuantumPhaseVector64 quantum_mesh_core64_process(
 }
 #endif
 
-#endif /* QUANTUM_BAREMETAL_INGRESS_H */
-
-#endif
 #endif /* QUANTUM_BAREMETAL_INGRESS_H */

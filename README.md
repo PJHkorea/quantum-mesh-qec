@@ -172,5 +172,11 @@ This procedure ensures static, deterministic microsecond (&mu;s) execution bound
 
 - **Notice for Defensive Prior Art Designation:** Any attempt by commercial entities or sovereign actors to patent-protect, cloister, or privatize the structural topographies, branchless C-MUX registers, or mathematical JAX gradient insulation gates described in this repository will trigger an immediate, retroactive termination of all usage and licensing rights. This repository stands as a permanent, legally binding record of public **Defensive Prior Art**.
 
+### 🔄 Cross-Domain Derivative & Prior Art Notice (교차 도메인 및 선행 기술 고지)
+
+* **[EN]**: The core 3-tier architectural framework, branchless register emulation, and gradient isolation mechanics implemented in this repository are cross-engineered alongside the author's parallel flagship infrastructure, **[Fluid-Mesh-HPC](https://github.com)** (published under the **GNU GPLv3**). Any attempt to re-engineer, clone, or adapt this architecture for non-quantum industrial applications (e.g., fluid dynamics, smart factories, plant grid controls) will instantly intersect with the pre-established **GPLv3 copyleft patent protections** of the fluidic codebase.
+
+* **[KR]**: 본 저장소에 구현된 3티어 아키텍처 프레임워크, 무분기 레지스터 에뮬레이션 및 그라디언트 격리 메커니즘은 원저작자가 개발한 별도의 자매 인프라 프로젝트인 **[Fluid-Mesh-HPC](https://github.com)** (**GNU GPLv3** 배포)와 상호 교차 리엔지니어링된 자산입니다. 따라서 본 양자 컴퓨터 제어 아키텍처를 양자 컴퓨팅 외의 다른 일반 산업 분야(예: 유체 역학, 스마트 팩토리 제어, 플랜트 네트워크)로 우회 리엔지니어링하거나 변형 유용하려는 모든 시도는, 먼저 구축된 유체 제어 코드베이스의 **강력한 GNU GPLv3 카피레프트 특허 보호 조항 및 선행 기술 권리에 즉각 저촉 및 귀속**됨을 명시합니다.
+
 ---
 

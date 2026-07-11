@@ -69,33 +69,27 @@ Traditional Fault-Tolerant Quantum Computing (FTQC) infrastructures face a catas
                                                                            +-----------------------+
 ```
 
-1. **Edge Profiling (Layer 1):** The C99 hardware-fused execution matrix continuously monitors high-frequency quantum oscillations across a 4-neighbor 2D mesh grid topology. Upon detecting localized phase destruction, it injects an absolute hardware failure marker (`-99.0f`) into criminal General-Purpose Registers (GPR) at a strict, branchless nanosecond-scale baseline.
-2. **Decentralized Shielding (Layer 2):** The respective **Layer 2 AI Core (Sector Sovereign)** assigned to that 32-channel qubit sensor segment ingests the local telemetry stream. Intercepting the `-99.0f` signature instantly maps the faulty segment to a protective neutral baseline, triggering `jax.lax.stop_gradient` to mathematically freeze backpropagation, locking model parameters from gradient explosion or cross-contamination.
-3. **Asynchronous Homeostasis (Layer 3):** Operating on a passive asynchronous 100ms epoch router loop, Layer 3 completely avoids Python's Global Interpreter Lock (GIL) limitations. It maintains a clean, zero-compute baseline under parity. Upon receiving the single-bit refined alert token from the compromised Sector Sovereign, it triggers a critical hardware interrupt, awakens dormant backup infrastructures from **Cold Standby**, and executes high-speed DMA register streaming to apply instant cross-axis parameter compensation.
-
-
----
-
-## 📐 System Topology
-
-*   **Layer 1 (Sensor Rail):** C99 inlined, 4-neighbor 2D mesh, direct register hardware health markers.
-*   **Layer 2 (AI Core):** JAX/XLA-fused, decentralized sector sovereign, local anomaly mitigation.
-*   **Layer 3 (Global Orchestrator):** Asynchronous Python, passive, fault-tolerant, high-speed DMA correction.
+1. **Edge Profiling (Layer 1):** The C99 hardware-fused execution matrix monitors high-frequency quantum oscillations across a 4-neighbor 2D mesh-grid topology. Upon detecting localized phase destruction, it injects an absolute hardware failure marker (`-99.0f`) into dedicated General-Purpose Registers (GPR) at a strict, branchless nanosecond-scale execution baseline.
+2. **Decentralized Shielding (Layer 2):** The assigned **Layer 2 AI Core (Sector Sovereign)** ingests the 32-channel localized telemetry stream. Intercepting the `-99.0f` signature instantly maps the faulty segment to a protective neutral baseline, triggering `jax.lax.stop_gradient` to mathematically freeze the backpropagation chain, locking pretrained weights from gradient cross-contamination.
+3. **Asynchronous Homeostasis (Layer 3):** Operating on a passive asynchronous 100ms epoch router loop to bypass Python's GIL limitations, Layer 3 maintains a strict zero-compute baseline under parity. Upon receiving the single-bit refined alert token, it fires a hardware interrupt, awakens dormant backup infrastructures from **Cold Standby**, and executes high-speed DMA register streaming to apply instant cross-axis phase compensation.
 
 ---
 
-## 🔄 Pipeline Workflow
-
-*   **Edge (L1):** Nanosecond-scale, branchless detection (`-99.0f` fault token) via assembly.
-*   **Isolation (L2):** `jax.lax.stop_gradient` halts backpropagation on local faults, maintaining global model integrity.
-*   **Recovery (L3):** Asynchronous, Cold-Standby activation for instant cross-axis phase stabilization.
-
----
 
 ## ⚡ Mathematical & Structural Proof of Concept
 
 ### 1. Matrix-Free Cross-Axis Phase Stabilization
-Instead of utilizing global, latency-heavy matrix solvers, `Quantum-Mesh-QEC` implements decentralized, localized tensor analysis across 32-channel edge sensors via Layer 2 AI Cores. By calculating discrete spatial phase gradients ($U = \text{East}-\text{West}$; $V = \text{North}-\text{South}$), the system achieves instantaneous, autonomous fault correction. When a quadrant failure occurs (e.g., $N \to -99.0f$), the Layer 1 C-Kernel intercepts the boundary, remapping the faulty sector (e.g., $N \to 0.0$) and applying a localized cross-inversion ($V_{\text{fault}} = -\text{Spatial Phase Gradient } V$) without needing centralized Layer 3 instructions.
+Instead of utilizing global, latency-heavy matrix solvers, `Quantum-Mesh-QEC` implements decentralized, localized tensor analysis across 32-channel edge sensors via Layer 2 AI Cores. By calculating discrete spatial phase gradients:
+
+$$\Delta\Phi_U = \text{Axis}_{\text{EAST}} - \text{Axis}_{\text{WEST}}$$
+$$\Delta\Phi_V = \text{Axis}_{\text{NORTH}} - \text{Axis}_{\text{SOUTH}}$$
+
+The system achieves instantaneous, autonomous fault correction. When a quadrant failure occurs (e.g., $\text{Axis}_{\text{NORTH}} \to -99.0f$), the Layer 1 C-Kernel intercepts the boundary, remapping the faulty sector (e.g., $\text{Axis}_{\text{NORTH}} \to 0.0$) and applying a localized cross-inversion:
+
+$$V_{\text{fault}} = - \Delta\Phi_V \times \gamma_{\text{decoupling}}$$
+
+This operation executes entirely within local hardware registers without needing centralized Layer 3 instructions.
+
 
 ---
 
@@ -118,31 +112,26 @@ The Layer 3 Global Pulse Orchestrator bypasses Python's GIL by asynchronously mo
 
 ## 🚀 Production Deployment & AOT JIT Warm-up
 
-To mitigate JAX/XLA's initial Ahead-of-Time (AOT) compilation lag in critical environments, the Layer 3 orchestrator performs a concurrent dummy trace across all Layer 2 instances during initialization:
+To completely eliminate JAX/XLA's initial Ahead-of-Time (AOT) compilation lag during mission-critical quantum execution loops, the Layer 3 orchestrator mandates a concurrent warm-up trace across all Layer 2 instances during the infrastructure boot sequence:
 
 ```python
-# Production Initialization Hook
+# Production Infrastructure Ingestion Hook
+from qec_algebraic_insulated_core import QecAlgebraicInsulatedCore, trigger_system_warmup, QUANTUM_CONTROL_CONFIG
+
 ai_brain = QecAlgebraicInsulatedCore(QUANTUM_CONTROL_CONFIG)
-trigger_system_warmup(ai_brain)  # Compiles static tracks to machine code
+trigger_system_warmup(ai_brain)  # Freezes and compiles static paths to raw machine code
 ```
 
-This procedure ensures static, deterministic microsecond (\(\mu s\)) latency for live operations.
+This procedure ensures static, deterministic microsecond (&mu;s) execution bounds for all subsequent live quantum telemetry tracking cycles.
 
 ---
 
 ## 🔒 Defensive Patent Clause & License (Apache 2.0)
 
-This software is licensed under **Apache 2.0**, reinforced with strict **Patent Retaliation Protection**.
+- This software infrastructure is published under the terms of the **Apache License, Version 2.0**, reinforced with an explicit **Patent Retaliation Protection** protocol.
 
-```text
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
 
-    http://apache.org
-```
-
-**Notice:** Any attempt to patent-protect, clone, or privatize the described architectural topographies, JAX gates, or C-MUX emulation mechanisms will result in immediate termination of licensing rights, establishing this repository as a permanent Defensive Prior Art record.
+- **Notice for Defensive Prior Art Designation:** Any attempt by commercial entities or sovereign actors to patent-protect, cloister, or privatize the structural topographies, branchless C-MUX registers, or mathematical JAX gradient insulation gates described in this repository will trigger an immediate, retroactive termination of all usage and licensing rights. This repository stands as a permanent, legally binding record of public **Defensive Prior Art**.
 
 ---
 

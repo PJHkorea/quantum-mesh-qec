@@ -35,21 +35,12 @@ py::array_t<float> extract_ancilla_syndrome_buffer(uintptr_t struct_raw_ptr) {
         // Protected from unexpected Python Garbage Collector intervention or invalid memory frees.
     });
 
-    // Enforce specific metadata flags to notify JAX that this buffer resides 
+      // Enforce specific metadata flags to notify JAX that this buffer resides 
     // on a shared/unified device-accessible memory boundary to block internal deep copying.
     return py::array_t<float>(
-        {2},                         // Shape: [ancilla_x, ancilla_z] / [state_phi, state_theta]
+        {2},                         // Shape: [state_phi, state_theta]
         {sizeof(float)},             // Strides: Single float alignment
         syndrome_head_ptr,           // Raw physical pointer (PCIe Unified/BAR Memory space)
-        buffer_handle                // Python object lifecycle fence
-    );
-}
-
-       // Retain the type-punned hardware register bypass view
-    return py::array_t<float>(
-        {2},                         // Shape: [state_phi, state_theta]
-        {sizeof(float)},             // Strides: Single float step 
-        syndrome_head_ptr,           // Raw unified device memory head pointer
         buffer_handle                // Python object lifecycle fence
     );
 }

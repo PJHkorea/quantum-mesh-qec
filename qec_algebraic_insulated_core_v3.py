@@ -154,16 +154,11 @@ if __name__ == "__main__":
     print("\n[Target Sub-Grid Static Parametric Syndrome Filtering Constants Output]:")
     print(optimized_constants)
 
-"""
-💡 [PRODUCTION DEPLOYMENT & INTEGRATION GUIDELINE]
-
-1. 단독 검증: 이 파일 단독 실행 시 최초 웜업 타임(수십 ms)과 실전 속도(마이크로초) 차이를 로그로 검증 가능.
-2. 레이어 3 오케스트레이터 연동: 전역 사령탑(Global Pulse Orchestrator)이 32개 분산 구역 인스턴스를 부팅하는 단계(__init__)에서 
-   각 개별 구역 코어 가동 직후 trigger_system_warmup을 호출하도록 세팅하여 실제 상용화 환경의 숨은 병목을 완벽히 밀봉.
-
-[EN]
-💡 [PRODUCTION DEPLOYMENT & INTEGRATION GUIDELINE]
-
-1. Standalone Verification: Executing this file in isolation directly benchmarks the stark latency difference between the initial warm-up (tens of ms) and live execution cycles (microseconds).
-2. Layer 3 Orchestrator Integration: Force the global pulse orchestrator to invoke trigger_system_warmup during the bootstrap sequence (__init__) of all distributed sector instances, perfectly sealing hidden software bottlenecks before live quantum streaming ingestion.
-"""
+    """
+    💡 [PRODUCTION DEPLOYMENT & INTEGRATION GUIDELINE]
+    1. Standalone Verification: Executing this file in isolation directly benchmarks the stark 
+       latency difference between the initial 2D matrix warm-up and live microsecond execution cycles.
+    2. Layer 3 Orchestrator Integration: Force the global asynchronous flow orchestrator to invoke 
+       trigger_system_warmup during the bootstrap sequence (__init__) of all 16 independent sector instances, 
+       perfectly sealing hidden software bottlenecks and inter-sector lock contentions before live fluid ingestion.
+    """
